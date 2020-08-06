@@ -44,9 +44,9 @@ class CartPoleQAgent():
             return np.argmax(self.Q_table[state])
 
     #update state according to equation
-    def update_q(self, state, action, reward, new_state):
+    def update_q(self, state, action, reward, new_state, new_action):
         self.Q_table[state][action] += self.learning_rate * (reward + self.discount *
-            np.max(self.Q_table[new_state]) - self.Q_table[state][action])
+            self.Q_table[new_state][new_action] - self.Q_table[state][action])
 
     #decrease epsilon
     def get_epsilon(self, t):
@@ -65,15 +65,14 @@ class CartPoleQAgent():
             self.epsilon = self.get_epsilon(e)
             done = False
             rewsum = 0
-            tick = 0
-            while not done and tick<=200:
+            while not done and rewsum<=200:
                 action = self.choose_action(current_state)
                 obs, reward, done, _ = self.env.step(action)
                 new_state = self.discretize_state(obs)
-                self.update_q(current_state, action, reward, new_state)
+                new_action = self.choose_action(new_state)
+                self.update_q(current_state, action, reward, new_state, new_action)
                 current_state = new_state
                 rewsum = rewsum+1
-                tick +=1
             self.rewarr.append(rewsum)  
 
     #run one episode without training using current q-table
@@ -105,6 +104,8 @@ ax.scatter(X, agent.rewarr, 7, color = 'C2')
 ax.axhline(y=195, color='r')
 ax.set_xlabel("Episode")
 ax.set_ylabel("Reward")
+ax.grid(alpha = 0.5)
+ax.set_title("SARSA rewards during 1000 episodes")
 fig.show()
 #%%
 t = agent.run()

@@ -105,6 +105,8 @@ ax.scatter(X, agent.rewarr, 7, color = 'C2')
 ax.axhline(y=195, color='r')
 ax.set_xlabel("Episode")
 ax.set_ylabel("Reward")
+ax.grid(alpha = 0.5)
+ax.set_title("Q-learning rewards during 1000 episodes")
 fig.show()
 #%%
 t = agent.run()
