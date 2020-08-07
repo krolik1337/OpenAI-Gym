@@ -5,7 +5,7 @@ import math
 import matplotlib as mpl 
 import matplotlib.pyplot as plt
 
-class CartPoleSARSAAgent():
+class CartPoleQAgent():
     def __init__(self, buckets=(1, 1, 6, 3), episodes=1000, min_lr=0.1, min_epsilon=0.01, discount=1.0, decay=20):
         # declaring number of buckets to split continuous data, number of training episodes, minimal learning rate
         # minimal epsilon (eplore/exploit ratio), discount, rate of decay, environment and table for rewards
@@ -44,9 +44,9 @@ class CartPoleSARSAAgent():
             return np.argmax(self.Q_table[state])
 
     #update state according to equation
-    def update_q(self, state, action, reward, new_state, new_action):
+    def update_q(self, state, action, reward, new_state):
         self.Q_table[state][action] += self.learning_rate * (reward + self.discount *
-            self.Q_table[new_state][new_action] - self.Q_table[state][action])
+            np.max(self.Q_table[new_state]) - self.Q_table[state][action])
 
     #decrease epsilon
     def get_epsilon(self, t):
@@ -59,8 +59,8 @@ class CartPoleSARSAAgent():
     #generate q-table for specified number of episodes, save gained rewards
     def train(self):
         for e in range(self.episodes):
-            current_state = self.discretize(self.env.reset())# reset environment
-            self.learning_rate = self.get_learning_rate(e) #get new values of learning rate and epsilon
+            current_state = self.discretize(self.env.reset()) # reset environment
+            self.learning_rate = self.get_learning_rate(e)  #get new values of learning rate and epsilon
             self.epsilon = self.get_epsilon(e)
             done = False
             rewsum = 0 #clean reward sum for current episode
@@ -68,11 +68,10 @@ class CartPoleSARSAAgent():
                 action = self.get_action(current_state) # choose action given current state
                 obs, reward, done, _ = self.env.step(action)
                 new_state = self.discretize(obs) #discretize observation
-                new_action = self.get_action(new_state)
-                self.update_q(current_state, action, reward, new_state, new_action) #update q-table
+                self.update_q(current_state, action, reward, new_state)#update q-table
                 current_state = new_state
-                rewsum = rewsum+1
-            self.rewarr.append(rewsum) #append reward gained in episode to array 
+                rewsum = rewsum+reward
+            self.rewarr.append(rewsum)  #append reward gained in episode to array 
 
     #run one episode without training using current q-table
     def run(self):
@@ -91,7 +90,7 @@ class CartPoleSARSAAgent():
 
 #%%
 
-agent = CartPoleSARSAAgent()
+agent = CartPoleQAgent()
 t = agent.run()
 print("Not trained agent survived", t, "ticks.", sep=" ")
 agent.train()
@@ -104,7 +103,7 @@ ax.axhline(y=195, color='r')
 ax.set_xlabel("Episode")
 ax.set_ylabel("Reward")
 ax.grid(alpha = 0.5)
-ax.set_title("SARSA rewards during 1000 episodes")
+ax.set_title("Q-learning rewards during 1000 episodes")
 fig.show()
 #%%
 t = agent.run()
